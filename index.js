@@ -10,10 +10,17 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Supabase client
-const supabaseUrl = (process.env.SUPABASE_URL || 'https://placeholder.supabase.co').trim();
-const supabaseKey = (process.env.SUPABASE_ANON_KEY || 'placeholder').trim();
+const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
+const supabaseKey = (process.env.SUPABASE_ANON_KEY || '').trim();
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
+  console.error('CRITICAL ERROR: Supabase Environment Variables are missing! Database connections will fail.');
+}
+
+const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseKey || 'placeholder'
+);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-me';
 
@@ -66,6 +73,11 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
+  if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+    res.locals.messages.push({ category: 'danger', text: 'MISSING ENVIRONMENT VARIABLES: SUPABASE_URL is not set in this environment!' });
+    return res.render('register');
+  }
+
   const { username, email, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
   
