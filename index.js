@@ -10,10 +10,10 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.SUPABASE_ANON_KEY || 'placeholder'
-);
+const supabaseUrl = (process.env.SUPABASE_URL || 'https://placeholder.supabase.co').trim();
+const supabaseKey = (process.env.SUPABASE_ANON_KEY || 'placeholder').trim();
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-me';
 
