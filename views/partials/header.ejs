@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <% if (typeof title !== 'undefined' && title) { %>
+        <title><%= title %> - Nebula Blog</title>
+    <% } else { %>
+        <title>Nebula Blog</title>
+    <% } %>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <a class="nav-logo" href="/">Nebula</a>
+            <nav class="nav-links">
+                <a class="nav-item" href="/">Home</a>
+                <% if (current_user) { %>
+                    <a class="nav-item" href="/post/new">New Post</a>
+                    <a class="nav-item" href="/logout">Logout</a>
+                <% } else { %>
+                    <a class="nav-item" href="/login">Login</a>
+                    <a class="nav-item" href="/register">Register</a>
+                <% } %>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="flash-messages">
+            <% if (typeof messages !== 'undefined' && messages.length > 0) { %>
+                <% messages.forEach(function(msg) { %>
+                    <div class="alert alert-<%= msg.category %>">
+                        <%= msg.text %>
+                    </div>
+                <% }); %>
+            <% } %>
+        </div>

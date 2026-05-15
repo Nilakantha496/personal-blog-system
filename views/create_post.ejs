@@ -1,0 +1,18 @@
+<%- include('partials/header') %>
+<div class="glass-panel" style="max-width: 800px; margin: 0 auto;">
+    <h2 class="mb-4"><%= typeof legend !== 'undefined' ? legend : 'Post' %></h2>
+    <form method="POST" action="">
+        <div class="form-group">
+            <label class="form-label" for="title">Title</label>
+            <input class="form-control" type="text" id="title" name="title" value="<%= (typeof post !== 'undefined' && post) ? post.title : '' %>" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="content">Content</label>
+            <textarea class="form-control" id="content" name="content" required><%= (typeof post !== 'undefined' && post) ? post.content : '' %></textarea>
+        </div>
+        <div class="form-group mt-4">
+            <button class="btn" type="submit"><%= typeof legend !== 'undefined' ? legend : 'Submit' %></button>
+        </div>
+    </form>
+</div>
+<%- include('partials/footer') %>
