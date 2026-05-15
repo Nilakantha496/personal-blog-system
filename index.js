@@ -10,17 +10,25 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Supabase client
-const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
-const supabaseKey = (process.env.SUPABASE_ANON_KEY || '').trim();
+let supabaseUrl = (process.env.SUPABASE_URL || '').replace(/['"]/g, '').trim();
+let supabaseKey = (process.env.SUPABASE_ANON_KEY || '').replace(/['"]/g, '').trim();
 
-if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
-  console.error('CRITICAL ERROR: Supabase Environment Variables are missing! Database connections will fail.');
+if (supabaseUrl && !supabaseUrl.startsWith('http')) {
+  supabaseUrl = 'https://' + supabaseUrl;
 }
 
-const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co', 
-  supabaseKey || 'placeholder'
-);
+let supabase;
+let supabaseInitError = null;
+
+try {
+  supabase = createClient(
+    supabaseUrl || 'https://placeholder.supabase.co', 
+    supabaseKey || 'placeholder'
+  );
+} catch (e) {
+  console.error("Failed to initialize Supabase client:", e);
+  supabaseInitError = e.message;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-me';
 
@@ -33,17 +41,18 @@ app.use(cookieParser());
 
 // Safety middleware to prevent Vercel crashes if env vars are missing
 app.use((req, res, next) => {
-  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
+  if (supabaseInitError || !supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
     return res.status(500).send(`
       <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 30px; border: 2px solid #ef4444; border-radius: 12px; background: #fef2f2; color: #991b1b;">
-        <h2 style="margin-top: 0;">Missing Database Configuration</h2>
-        <p>The application crashed because the Supabase environment variables are missing or invalid in this deployment.</p>
-        <p>Please go to your Vercel Dashboard, open this project's settings, and add:</p>
+        <h2 style="margin-top: 0;">Missing or Invalid Database Configuration</h2>
+        <p>The application could not initialize the database connection.</p>
+        <p><strong>Error:</strong> ${supabaseInitError || "Environment variables are missing."}</p>
+        <p>Common fixes:</p>
         <ul>
-          <li><strong>SUPABASE_URL</strong></li>
-          <li><strong>SUPABASE_ANON_KEY</strong></li>
+          <li>Make sure you didn't accidentally include quotes around your URL in the Vercel settings.</li>
+          <li>Make sure the URL starts with <code>https://</code>.</li>
         </ul>
-        <p><em>Remember to click "Redeploy" after adding them!</em></p>
+        <p><em>Remember to click "Redeploy" after fixing them!</em></p>
       </div>
     `);
   }
