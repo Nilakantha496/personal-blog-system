@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="glass-panel" style="padding: 3rem;">
+    <div class="flex justify-between items-center mb-4 pb-4 border-bottom">
+        <h1 class="post-detail-title">{{ post.title }}</h1>
+        {% if post.author == current_user %}
+            <div class="flex gap-2">
+                <a class="btn btn-outline" href="{{ url_for('update_post', post_id=post.id) }}" style="padding: 0.5rem 1rem;">Edit</a>
+                <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                    <button class="btn btn-danger" type="submit" style="padding: 0.5rem 1rem;">Delete</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="post-meta mb-4" style="font-size: 1rem;">
+        <span><strong>By {{ post.author.username }}</strong></span> &bull; 
+        <span>{{ post.date_posted.strftime('%B %d, %Y') }}</span>
+    </div>
+    
+    <div class="post-content mt-4">
+        {{ post.content | replace('\n', '<br>') | safe }}
+    </div>
+</article>
+
+<div class="comments-section" id="comments-app" data-post-id="{{ post.id }}">
+    <h3>Comments</h3>
+    
+    <div id="comments-container">
+        <!-- Comments injected via JS -->
+    </div>
+    
+    {% if current_user.is_authenticated %}
+        <div class="add-comment-box">
+            <h4 style="margin-bottom: 1rem; color: var(--text-main);">Add a Comment</h4>
+            <form id="comment-form">
+                <div class="form-group">
+                    <textarea class="form-control" id="comment-content" required placeholder="Share your thoughts..."></textarea>
+                </div>
+                <button type="submit" class="btn">Post Comment</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="add-comment-box text-center" style="background: rgba(99, 102, 241, 0.05); border: 2px dashed var(--accent-color);">
+            <p style="font-size: 1.1rem; color: var(--text-muted);"><a href="{{ url_for('login') }}" style="font-weight: 700;">Login</a> or <a href="{{ url_for('register') }}" style="font-weight: 700;">Register</a> to join the conversation.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}
