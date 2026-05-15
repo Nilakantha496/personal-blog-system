@@ -31,6 +31,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
+// Safety middleware to prevent Vercel crashes if env vars are missing
+app.use((req, res, next) => {
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
+    return res.status(500).send(`
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 30px; border: 2px solid #ef4444; border-radius: 12px; background: #fef2f2; color: #991b1b;">
+        <h2 style="margin-top: 0;">Missing Database Configuration</h2>
+        <p>The application crashed because the Supabase environment variables are missing or invalid in this deployment.</p>
+        <p>Please go to your Vercel Dashboard, open this project's settings, and add:</p>
+        <ul>
+          <li><strong>SUPABASE_URL</strong></li>
+          <li><strong>SUPABASE_ANON_KEY</strong></li>
+        </ul>
+        <p><em>Remember to click "Redeploy" after adding them!</em></p>
+      </div>
+    `);
+  }
+  next();
+});
+
 // Auth Middleware
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
@@ -59,12 +78,24 @@ app.use(authMiddleware);
 
 // Routes
 app.get('/', async (req, res) => {
-  const { data: posts, error } = await supabase
-    .from('posts')
-    .select('*, author:users(username)')
-    .order('date_posted', { ascending: false });
-    
-  res.render('index', { posts: posts || [] });
+  try {
+    const { data: posts, error } = await supabase
+      .from('posts')
+      .select('*, author:users(username)')
+      .order('date_posted', { ascending: false });
+      
+    res.render('index', { posts: posts || [] });
+  } catch (err) {
+    console.error("Database connection error on homepage:", err);
+    res.status(500).send(`
+      <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 30px; border: 2px solid #ef4444; border-radius: 12px; background: #fef2f2; color: #991b1b;">
+        <h2 style="margin-top: 0;">Database Connection Failed</h2>
+        <p>The application could not connect to Supabase. This is usually caused by an invalid <strong>SUPABASE_URL</strong>.</p>
+        <p><strong>Error details:</strong> ${err.message}</p>
+        <p>Please double-check your Vercel Environment Variables to ensure your URL is exactly as it appears in the Supabase dashboard (e.g., https://xyz.supabase.co).</p>
+      </div>
+    `);
+  }
 });
 
 app.get('/register', (req, res) => {
