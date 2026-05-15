@@ -80,7 +80,8 @@ app.post('/register', async (req, res) => {
   ]).select().single();
   
   if (error) {
-    res.locals.messages.push({ category: 'danger', text: 'Error registering account.' });
+    console.error('Supabase registration error:', error);
+    res.locals.messages.push({ category: 'danger', text: `Error registering account: ${error.message}` });
     return res.render('register');
   }
   
